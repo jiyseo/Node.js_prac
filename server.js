@@ -21,7 +21,7 @@ MongoClient.connect('mongodb://jiyseo:wldus0204!@ac-dykbkhs-shard-00-00.znkxaov.
     app.listen(8080, function(){
         console.log('listening on 8080');
     });
-})
+});
 
 var logcheck = 0;
 app.get('/', function(req, res){
@@ -191,5 +191,3 @@ passport.deserializeUser(function(id, done){
         done(null, ret);
     });
 });
-
-  
