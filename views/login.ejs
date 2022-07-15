@@ -15,6 +15,12 @@
         <% if (req == 1) { %>
           <h6 style="color:red">로그인 안하셨는데용</h6>
         <% } %>
+        <% if (req == 2) { %>
+          <h6 style="color:red">아이디나 비밀번호가 잘못되었는데용</h6>
+        <% } %>
+        <% if (req == 3) { %>
+          <h6 style="color:rgb(70, 60, 211)">회원가입 성공! 로그인해주세용</h6>
+        <% } %>
         <form action="/login" method="POST">
           <div class="form-group">
             <label>id</label>

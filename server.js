@@ -105,12 +105,7 @@ app.use(passport.session());
 function overlap_check(req, res, next){
     //console.log(req.body.id);
     db.collection('login').findOne({ id: (req.body.id) }, function (error, ret){
-        //console.log(ret.id);
-        if (ret.id == req.body.id)  {
-            //console.log('아이디 중복이다임망');
-            //res.send('아이디 중복인데용')
-            res.render('signup.ejs', {req : 1, logcheck : logcheck});
-        }
+        if (ret) res.render('signup.ejs', {req : 1, logcheck : logcheck});
         else next();
     });
 };
@@ -120,7 +115,7 @@ app.get('/signup', function(req, res){
 });
 
 app.post('/signup', overlap_check, function(req, res){
-    res.send('signup complete');
+    res.render('login.ejs', {req : 3, logcheck : logcheck});
     db.collection('login').insertOne({ id : req.body.id, pw : createHashedPassword(req.body.pw)}, function(error, res){ // Object 자료형, req.body라고 하면 요청했던 form에 적힌 데이터 수신가능
         console.log('save complete');
         if (error){return console.log(error)};
@@ -131,8 +126,12 @@ app.get('/login', function(req, res){
     res.render('login.ejs', {req : 0, logcheck : logcheck});
 });
 
+app.get('/loginfail', function(req, res){
+    res.render('login.ejs', {req : 2, logcheck : logcheck});
+});
+
 app.post('/login', passport.authenticate('local', { //local 방식으로 회원인지 인증
-    failureRedirect : '/fail'
+    failureRedirect : '/loginfail' // 로그인실패
 }), function(req, res){
     logcheck = 1;
     res.redirect('/') //회원 인증 성공 시
@@ -156,7 +155,6 @@ function logincheck(req, res, next){
     if (req.user){
         next()
     } else {
-        //res.send('로그인 안하셨는데용');
         res.render('login.ejs', {req : 1, logcheck : logcheck}); //? 뒤에 쓰면 GET method query로 서버에 전달
     }
 };
