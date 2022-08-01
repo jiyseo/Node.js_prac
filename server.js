@@ -6,6 +6,7 @@ app.set('view engine', 'ejs'); //ejs 사용 양식
 const methodOverride = require('method-override') //PUT 메소드 사용
 app.use(methodOverride('_method')) //PUT 메소드 사용
 const crypto = require('crypto');
+require('dotenv').config()
 
 const createHashedPassword = (password) => {
   return crypto.createHash("sha512").update(password).digest("base64");
@@ -14,11 +15,11 @@ const createHashedPassword = (password) => {
 app.use('/public', express.static('public')); //static 파일(css) 보관하기 위해 public폴더를 쓸 것이다 
 
 var db; //db를 저장할 변수 선언
-MongoClient.connect('mongodb://jiyseo:wldus0204!@ac-dykbkhs-shard-00-00.znkxaov.mongodb.net:27017,ac-dykbkhs-shard-00-01.znkxaov.mongodb.net:27017,ac-dykbkhs-shard-00-02.znkxaov.mongodb.net:27017/?ssl=true&replicaSet=atlas-sgvnfa-shard-0&authSource=admin&retryWrites=true&w=majority', function(error, client){
+MongoClient.connect(process.env.DB_URL, function(error, client){
     if (error) return console.log(error) //에러처리
     db = client.db('todoapp'); //todoapp 이라는 database에 연결
 
-    app.listen(8080, function(){
+    app.listen(process.env.PORT, function(){
         console.log('listening on 8080');
     });
 });
@@ -54,6 +55,27 @@ app.get('/list', function(req, res){
     });
 });
 
+app.get('/search', (req, res) => {
+    var to_search = [
+        {
+            $search: {
+                index: 'titleSearch',
+                text: {
+                    query: req.query.value,
+                    path: ["title", "date"] // 제목, 날짜 둘 다 찾고 싶으면 ["title", "date"]
+                }
+            }
+        },
+        //{ $sort : {_id : 1} },  //id를 오름차순으로 정렬, -1 : 내림차순
+        //{ $limit : 10 }, //상위 10개만 출력
+        //{ $project : { title : 1, _id : 0, score : {$meta:"searchScore"}}} //원하는 것만 출력 0은 안보여주고 1은 보여주라는 뜻
+    ]
+    db.collection('post').aggregate(to_search).toArray((error, ret)=>{
+        console.log(ret);
+    res.render('search.ejs', {posts : ret, logcheck : logcheck});
+    })
+})
+
 app.delete('/delete', function(req, res){
     console.log(req.body);
     req.body._id = parseInt(req.body._id); //자료형 숫자로 변환
@@ -70,6 +92,7 @@ app.get('/edit/:id', function(req, res){
         res.render('edit.ejs', { data : ret, logcheck : logcheck}) // data 라는 이름으로 ejs 파일로 데이터 전송
     });
 });
+
 
 app.put('/edit', function(req, res){
     db.collection('post').updateOne({ _id : parseInt(req.body.id)}, { $set : { title : req.body.title, date : req.body.date}}, function(error, ret){
@@ -91,7 +114,6 @@ app.get('/detail/:id', function(req, res){
 app.get((req,res)=>{
 	res.status(404).send('not found');
 });
-
 
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
